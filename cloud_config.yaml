@@ -27,4 +27,4 @@ vehicle_client_public_ip: "localhost"
 # 256 Cars - all clients
 #vehicle_client_public_ip: "20.172.248.156,20.242.82.41,172.200.91.133,172.171.196.63,172.190.137.118"  # ndm, client4, client3, client2, client1
 
-log_level: "warning"
+log_level: "INFO"

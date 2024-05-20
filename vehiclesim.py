@@ -20,6 +20,7 @@ import queue
 import carla
 import numpy as np
 import coloredlogs
+import pickle
 
 from opencda.version import __version__
 from opencda.core.common.cav_world import CavWorld
@@ -216,7 +217,10 @@ async def main():
     if 'edge_list' in scenario_yaml['scenario']:
         is_edge = True
         # TODO: support multiple edges...
-        target_speed = scenario_yaml['scenario']['edge_list'][0]['target_speed']
+        #target_speed = scenario_yaml['scenario']['edge_list'][0]['target_speed']
+        target_speed = scenario_yaml['scenario']['edge_list'][0]['members'][int(f'{vehicle_index}')]['behavior']['max_speed']
+        print(target_speed)
+        time.sleep(5)
         edge_sets_destination = scenario_yaml['scenario']['edge_list'][0]['edge_sets_destination'] \
             if 'edge_sets_destination' in scenario_yaml['scenario']['edge_list'][0] else False
 
@@ -352,6 +356,13 @@ async def main():
                 waypoint_proto = await ecloud_server.Client_GetWaypoints(wp_request)
                 network_emulator.enqueue_wp(waypoint_proto)
                 pong.command = ecloud.Command.TICK
+
+            elif pong.command == ecloud.Command.PULL_OBJECTS_AND_TICK:
+              obj_request = ecloud.ObjectRequest()
+              obj_request.vehicle_index = vehicle_index
+              object_proto = awayt ecloud_server.Client_GetObjects(obj_request)
+              network_emulator.enqueue_obj(obj_request)
+              pong.command = ecloud.Command.TICK
 
             # HANDLE END
             elif pong.command == ecloud.Command.END:

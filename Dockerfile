@@ -20,7 +20,7 @@ COPY requirements.txt .
 
 RUN python3.7 -m pip install -r requirements.txt
 
-RUN python3.7 -m pip install carla==0.9.14
+RUN python3.7 -m pip install carla==0.9.15
 
 RUN python3.7 -m pip install coloredlogs
 

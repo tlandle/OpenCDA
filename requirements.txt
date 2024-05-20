@@ -1,6 +1,6 @@
 matplotlib==3.4.3
 networkx==2.5.1
-numpy==1.21.4
+numpy
 pillow
 pyparsing==2.4.7
 six==1.16.0
