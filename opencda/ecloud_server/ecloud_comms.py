@@ -81,6 +81,11 @@ class EcloudClient:
 
     async def get_waypoints(self, request: ecloud.WaypointRequest) -> ecloud.WaypointBuffer:
         buffer = await self.stub.Client_GetWaypoints(request)
+        
+        return buffer
+
+    async def get_objects(self, request: ecloud.ObjectRequest) -> ecloud.ObjectBuffer:
+        buffer = await self.stub.Client_GetObjects(request)
 
         return buffer
 

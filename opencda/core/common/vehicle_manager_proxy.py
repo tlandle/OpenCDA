@@ -86,7 +86,7 @@ class VehicleManagerProxy(object):
     def __init__(
             self,
             vehicle_index,
-            #conn,
+            carla_world,
             config_yaml,
             application,
             carla_map,
@@ -100,7 +100,7 @@ class VehicleManagerProxy(object):
         if 'edge_list' in config_yaml['scenario']:
             # TODO: support multiple edges...
             self.is_edge = True
-            self.cav_config = config_yaml['scenario']['edge_list'][0]['members'][vehicle_index]
+            self.cav_config = config_yaml['scenario']['edge_list'][0]['vehicles'][vehicle_index]
         
         elif 'single_cav_list' in config_yaml['scenario']:
                 self.cav_config = config_yaml['scenario']['single_cav_list'][vehicle_index] if location_type == eLocationType.EXPLICIT \
@@ -109,6 +109,7 @@ class VehicleManagerProxy(object):
         else:
             assert(False, "no known vehicle indexing format found")
         
+        self.carla_world = carla_world
         self.cav_world = cav_world
         self.data_dumping = data_dumping
         self.application = application
@@ -142,8 +143,8 @@ class VehicleManagerProxy(object):
         sensing_config['perception']['camera_visualize'] = False
         sensing_config['perception']['lidar_visualize'] = False
         self.perception_manager = PerceptionManager(
-            self.vehicle, sensing_config['perception'], self.cav_world,
-            self.data_dumping)
+            self.vehicle, sensing_config['perception'], carla_world=self.carla_world, cav_world=self.cav_world,
+            data_dump=self.data_dumping)
         print("Perception Manager created")
 
         # behavior agent

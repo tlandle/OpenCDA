@@ -250,6 +250,8 @@ class ScenarioManager:
     vehicles = {} # vehicle_index -> tuple (actor_id, vid)
     vehicle_count = 0
 
+    rsu_managers = {}
+
     carla_version = None
     application = ['single']
     scenario = None
@@ -510,7 +512,8 @@ class ScenarioManager:
         elif 'edge_list' in scenario_params['scenario']:
             # TODO: support multiple edges...
             self.is_edge = True
-            self.vehicle_count = len(scenario_params['scenario']['edge_list'][0]['members'])
+            self.vehicle_count = len(scenario_params['scenario']['edge_list'][0]['vehicles'])
+            self.rsu_count = len(scenario_params['scenario']['edge_list'][0]['rsus'])
 
         elif 'single_cav_list' in scenario_params['scenario']:
             self.vehicle_count = len(scenario_params['scenario']['single_cav_list'])
@@ -653,6 +656,7 @@ class ScenarioManager:
             #                                *cav_config['spawn_special'])
 
             cav_vehicle_bp.set_attribute('color', '0, 0, 255')
+            cav_vehicle_bp.set_attribute('role_name', 'hero')
             #vehicle = self.world.spawn_actor(cav_vehicle_bp, spawn_transform)
 
             # create vehicle manager for each cav
@@ -1141,16 +1145,31 @@ class ScenarioManager:
         # create edges
         for e, edge in enumerate(
                 self.scenario_params['scenario']['edge_list']):
-            edge_manager = EdgeManager(edge, self.cav_world, carla_client=self.client, world_dt=world_dt, edge_dt=edge_dt, search_dt=search_dt)
-            for vehicle_index, cav in enumerate(edge['members']):
-                logger.debug("Creating VehiceManagerProxy for vehicle %s", vehicle_index)
-
+            edge_manager = EdgeManager(edge, self.cav_world, carla_client=self.client, world_dt=world_dt, edge_dt=edge_dt, search_dt=search_dt, mode=config_yaml['edge_base']['mode'])
+            for index, cav in enumerate(edge['rsus']):
+                rsu_manager = RSUManager(self.world, cav,
+                                   self.carla_map,
+                                   self.cav_world,
+                                   self.scenario_params['current_time'],
+                                   data_dump)
+                edge_manager.add_rsu(rsu_manager)
+                self.rsu_managers[index] = rsu_manager
+            for index, cav in enumerate(edge['vehicles']): 
+                logger.debug("Creating VehiceManagerProxy for vehicle %s", index)
                 # create vehicle manager for each cav
-                vehicle_manager = VehicleManagerProxy(
-                    vehicle_index, config_yaml, application,
-                    self.carla_map, self.cav_world,
-                    current_time=self.scenario_params['current_time'],
-                    data_dumping=data_dump, carla_version=self.carla_version)
+                #vehicle_manager = VehicleManagerProxy(
+                #      vehicle_index=index, config_yaml=config_yaml, application=application,
+                #      carla_world=self.world,
+                #      carla_map=self.carla_map, cav_world=self.cav_world,
+                #      current_time=self.scenario_params['current_time'],
+                #      data_dumping=data_dump, carla_version=self.carla_version)
+                vehicle_manager = VehicleManager(
+                      vehicle_index=index, config_yaml=config_yaml, application=application,
+                      carla_world=self.world,
+                      carla_map=self.carla_map, cav_world=self.cav_world,
+                      current_time=self.scenario_params['current_time'],
+                      data_dumping=data_dump, is_edge=True, carla_version=self.carla_version)
+
                 logger.debug("finished creating VehiceManagerProxy")
 
                 # self.tick_world()
@@ -1158,12 +1177,12 @@ class ScenarioManager:
                 # send gRPC with START info
                 self.application = application
 
-                vehicle_manager.start_vehicle()
+                #vehicle_manager.start_vehicle()
                 vehicle_manager.v2x_manager.set_platoon(None)
 
                 # add the vehicle manager to platoon
                 edge_manager.add_member(vehicle_manager)
-                self.vehicle_managers[vehicle_index] = vehicle_manager
+                self.vehicle_managers[index] = vehicle_manager
 
             try:
               self.tick_world()

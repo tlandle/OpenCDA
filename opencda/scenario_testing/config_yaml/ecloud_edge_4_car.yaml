@@ -51,11 +51,11 @@ vehicle_base: &vehicle_base
       activate: true # when not activated, ego position will be retrieved from server directly
       dt: *delta # used for kalman filter
       gnss: # gnss sensor configuration
-        noise_alt_stddev: 0.001
-        noise_lat_stddev: 1.0e-6
-        noise_lon_stddev: 1.0e-6
-        heading_direction_stddev: 0.1 # degree
-        speed_stddev: 0.2
+        noise_alt_stddev: 0
+        noise_lat_stddev: 0
+        noise_lon_stddev: 0
+        heading_direction_stddev: 0 # degree
+        speed_stddev: 0
       debug_helper: &loc_debug_helper
         show_animation: false # whether to show real-time trajectory plotting
         x_scale: 1.0 # used to multiply with the x coordinate to make the error on x axis clearer
@@ -130,11 +130,11 @@ edge_base: &edge_base
   change_leader_speed: true # whether to assign leader multiple speed to follow
   leader_speeds_profile: [ 85, 95 ] # different speed for leader to follow
   stage_duration: 10 # how long should the leader keeps in the current velocity stag
-  target_speed: 75 # kph
+  #target_speed: 75 # kph
   num_lanes: 4
   edge_dt: 0.210 # must be an even multiple of world_dt
   search_dt: 0.630
-  edge_sets_destination: false # otherwise, edge sets WP
+  edge_sets_destination: true # otherwise, edge sets WP
 
 # define the background traffic control by carla
 carla_traffic_manager:
@@ -160,11 +160,11 @@ scenario:
     step_count: 250
   edge_list:
     - <<: *edge_base
-      destination: [-160, -15.79, 0.3] # shared by *all* vehicles when edge_sets_destination == true
+      destination: [-250, -15.79, 0.3] # shared by *all* vehicles when edge_sets_destination == true
       members:
         - <<: *vehicle_base
           spawn_position: [-45.52, -19.292, 0.3, 0, 180, 0]
-          destination: [-160, -15.79, 0.3]
+          destination: [-250, -15.79, 0.3]
           sensing:
             <<: *base_sensing
             perception:
@@ -179,7 +179,7 @@ scenario:
             communication_range: 35
           behavior:
             <<: *base_behavior
-            max_speed: 100 # maximum speed, km/h
+            max_speed: 25 # maximum speed, km/h
             tailgate_speed: 111
             overtake_allowed: true
             local_planner:
@@ -188,7 +188,7 @@ scenario:
               debug: false
         - <<: *vehicle_base
           spawn_position: [-39.52, -19.79, 0.3, 0, 180, 0]
-          destination: [-160, -15.79, 0.3]
+          destination: [-250, -15.79, 0.3]
           sensing:
             <<: *base_sensing
             perception:
@@ -203,7 +203,7 @@ scenario:
             communication_range: 35
           behavior:
             <<: *base_behavior
-            max_speed: 100 # maximum speed, km/h
+            max_speed: 25 # maximum speed, km/h
             tailgate_speed: 111
             overtake_allowed: true
             local_planner:
@@ -212,7 +212,7 @@ scenario:
               debug: false
         - <<: *vehicle_base
           spawn_position: [-45.52, -15.79, 0.3, 0, 180, 0]
-          destination: [-160, -15.79, 0.3]
+          destination: [-250, -15.79, 0.3]
           sensing:
             <<: *base_sensing
             perception:
@@ -227,7 +227,7 @@ scenario:
             communication_range: 35
           behavior:
             <<: *base_behavior
-            max_speed: 100 # maximum speed, km/h
+            max_speed: 25 # maximum speed, km/h
             tailgate_speed: 111
             overtake_allowed: true
             local_planner:
@@ -236,7 +236,7 @@ scenario:
               debug: false
         - <<: *vehicle_base
           spawn_position: [-39.60, -15.29, 0.3, 0, 180, 0]
-          destination: [-160, -15.79, 0.3]
+          destination: [-250, -15.79, 0.3]
           sensing:
             <<: *base_sensing
             perception:
@@ -251,7 +251,7 @@ scenario:
             communication_range: 35
           behavior:
             <<: *base_behavior
-            max_speed: 100 # maximum speed, km/h
+            max_speed: 200 # maximum speed, km/h
             tailgate_speed: 111
             overtake_allowed: true
             local_planner:

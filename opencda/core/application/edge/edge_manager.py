@@ -69,13 +69,17 @@ class EdgeManager(object):
         The destiantion of the current plan.
     """
 
-    def __init__(self, config_yaml, cav_world, carla_client, world_dt=0.03, edge_dt=0.20, search_dt=2.00):
+    def __init__(self, config_yaml, cav_world, carla_client, world_dt=0.03, edge_dt=0.20, search_dt=2.00, mode=None):
 
         self.edgeid = str(uuid.uuid1())
         self.vehicle_manager_list = []
-        self.target_speed = config_yaml['target_speed'] # kph
-        self.traffic_velocity = self.target_speed * 0.277778 # convert to m/s! NOT kph
-        self.numcars = len(config_yaml['members']) # TODO - set edge_index
+        self.rsu_manager_list = []
+        #self.target_speed = config_yaml['target_speed'] # kph
+        #self.traffic_velocity = self.target_speed * 0.277778 # convert to m/s! NOT kph
+        print(config_yaml)
+        self.numcars = len(config_yaml['vehicles']) # TODO - set edge_index
+        self.numrsus = len(config_yaml['rsus'])
+        self.activate = config_yaml["mode"]
         #self.locations = []
         self.destination = None
         # Query the vehicle locations and velocities + target velocities
@@ -100,6 +104,8 @@ class EdgeManager(object):
         self.secondary_offset=0
         cav_world.update_edge(self)
         self.carla_client = carla_client
+        self.objects = {}
+        self.mode = mode
 
         self.debug_helper = EdgeDebugHelper(0)
 
@@ -273,6 +279,9 @@ class EdgeManager(object):
         """
         self.vehicle_manager_list.append(vehicle_manager)
 
+    def add_rsu(self, rsu_manager):
+        self.rsu_manager_list.append(rsu_manager)
+
     def get_route_waypoints(self, destination):
         self.start_waypoint = self._map.get_waypoint(start_location)
 
@@ -333,6 +342,7 @@ class EdgeManager(object):
         self.spawn_x.clear()
         self.spawn_y.clear()
         self.spawn_v.clear()
+        self.objects.clear()
         # start_time = time.time()
         # # for i in range(len(self.vehicle_manager_list)):
         # #     self.vehicle_manager_list[i].update_info()
@@ -347,12 +357,21 @@ class EdgeManager(object):
             self.spawn_x.append(x)
             self.spawn_y.append(y)
             self.spawn_v.append(v_scalar)
+            print(self.vehicle_manager_list[i].agent.objects)
+            #self.objects =  {**self.objects,  **self.vehicle_manager_list[i].agent.objects}
+            print(self.objects)
             logger.info("update_information for vehicle_%s - x:%s, y:%s", i, x, y)
         end_time = time.time()
         logger.debug("Update Info Transform Forward Time: %s", (end_time - start_time))
         #print(self.spawn_x)
         #print(self.spawn_y)
         #print(self.spawn_v)
+        #for i in range(len(self.rsu_manager_list)):
+            #self.objects = {**self.objects, **self.rsu_manager_list[i].objects}
+            #print(self.objects)
+
+        print(self.objects)
+          
 
         start_time = time.time()
         #Added in to check if traffic tracker updating would fix waypoint deque issue
@@ -384,7 +403,6 @@ class EdgeManager(object):
             #responses - slow down on seeing a vehicle ahead that has slower velocities, else hit target velocity.
             #Somewhat suboptimal, ideally the other vehicle would be
             #folded into existing groups. No easy way to do that yet.
-                #print("Slicing")
                 a_star = AStarPlanner(slice_list[i], self.ov, self.oy, self.grid_size, self.robot_radius, self.Traffic_Tracker.cars_on_road, i)
                 rv, ry, rx_tracked = a_star.planning()
                 if len(ry) >= 2: #If there is some planner result, then we move ahead on using it
@@ -394,7 +412,6 @@ class EdgeManager(object):
                     lanechange_command[i] = ry[0]
                     vel_array[i] = ry[0]
 
-        #print("Sliced")
         for i in range(len(slice_list)-1,-1,-1): #Relay lane change commands and new velocities to vehicles where needed
             if len(slice_list[i]) >= 1 and len(lanechange_command[i]) >= 1:
                 carnum = 0
@@ -512,6 +529,32 @@ class EdgeManager(object):
         #print("Locations appended: ", self.locations)
 
     def run_step(self):
+      if(self.activate == "PERCEPTION"):
+        print("running perception_step edge")
+        self.run_step_perception()
+      elif(self.activate == "MANEUVER"):
+        self.run_step_maneuver()
+
+    def run_step_perception(self):
+        for idx, vehicle_manager in enumerate(self.vehicle_manager_list):
+          objects_to_send = self.objects.copy()
+          print("Vehicle %s" %idx)
+          for object_type, object_list in objects_to_send.items():
+            for obj in object_list:
+              print("Object %s"%obj)
+              if obj.get_location().distance(vehicle_manager.vehicle.get_location()) < 1:
+                object_list.remove(obj)
+          vehicle_manager.edge_objects.clear()
+          vehicle_manager.edge_objects = objects_to_send
+          vehicle_manager.update_info()
+          control = vehicle_manager.run_step()
+          vehicle_manager.vehicle.apply_control(control)
+          print("Applied control")
+              
+          
+          
+          
+    def run_step_maneuvering(self):
         """
         Run one control step for each vehicles.
 

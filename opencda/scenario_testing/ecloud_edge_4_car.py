@@ -29,7 +29,7 @@ import ecloud_pb2 as ecloud
 LOG_NAME = "ecloud_4lane_edge.log" # data drive from file name?
 SCENARIO_NAME = "ecloud_4lane_edge_scenario" # data drive from file name?
 TOWN = 'Town06'
-STEP_COUNT = 250
+STEP_COUNT = 600
 
 def run_scenario(opt, scenario_params):
     step = 0

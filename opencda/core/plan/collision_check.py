@@ -28,12 +28,12 @@ class CollisionChecker:
         The offset between collision checking circle and the trajectory point.
     """
 
-    def __init__(self, time_ahead=1.2, circle_radius=1.0, circle_offsets=None):
+    def __init__(self, time_ahead=1.2, circle_radius=3.0, circle_offsets=None):
 
         self.time_ahead = time_ahead
-        self._circle_offsets = [-1.0,
+        self._circle_offsets = [-3.0,
                                 0,
-                                1.0] \
+                                3.0] \
             if circle_offsets is None else circle_offsets
         self._circle_radius = circle_radius
 
@@ -208,8 +208,10 @@ class CollisionChecker:
         distance_check = min(max(int(self.time_ahead * speed / 0.1), 90),
                              len(path_x)) \
             if not adjacent_check else len(path_x)
+        #print(distance_check)
 
         obstacle_vehicle_loc = obstacle_vehicle.get_location()
+        print("Obstacle_vehicle Location (%s, %s, %s)" %(obstacle_vehicle_loc.x, obstacle_vehicle_loc.y, obstacle_vehicle_loc.z))
         obstacle_vehicle_yaw = \
             carla_map.get_waypoint(obstacle_vehicle_loc).transform.rotation.yaw
 
@@ -256,8 +258,10 @@ class CollisionChecker:
 
             collision_dists = np.subtract(collision_dists, self._circle_radius)
             collision_free = collision_free and not np.any(collision_dists < 0)
+            #print(collision_dists)
 
             if not collision_free:
+                print(collision_dists)
                 break
 
         return collision_free

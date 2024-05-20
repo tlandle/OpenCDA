@@ -1,6 +1,7 @@
 import os
 import time
 
+import torch.distributed.rpc as rpc
 import torch.multiprocessing as mp
 
 

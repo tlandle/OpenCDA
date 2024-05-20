@@ -55,7 +55,7 @@ class CameraSensor:
     """
 
     def __init__(self, vehicle, world, relative_position, global_position):
-        if vehicle is not None:
+        if world is None and vehicle is not None:
             world = vehicle.get_world()
 
         blueprint = world.get_blueprint_library().find('sensor.camera.rgb')
@@ -63,6 +63,7 @@ class CameraSensor:
 
         spawn_point = self.spawn_point_estimation(relative_position,
                                                   global_position)
+        print("Vehicle: %s"%vehicle)
 
         if vehicle is not None:
             self.sensor = world.spawn_actor(
@@ -371,9 +372,12 @@ class PerceptionManager:
         if hasattr(vehicle, 'get_world'): 
           self.carla_world = carla_world if carla_world is not None \
             else self.vehicle.get_world()
-          self._map = self.carla_world.get_map()
-        self.id = infra_id if infra_id is not None else vehicle.id
+        else:
+          self.carla_world = carla_world
 
+        self._map = self.carla_world.get_map()
+        self.id = infra_id if infra_id is not None else vehicle.id
+        print(carla_world)
 
         print(config_yaml)
         self.activate = config_yaml['activate']
@@ -466,7 +470,7 @@ class PerceptionManager:
         """
         return a.get_location().distance(self.ego_pos.location)
 
-    def detect(self, ego_pos):
+    def detect(self, ego_pos, call_id=None):
         """
         Detect surrounding objects. Currently only vehicle detection supported.
 
@@ -487,7 +491,7 @@ class PerceptionManager:
                    'traffic_lights': []}
 
         if not self.activate:
-            objects = self.deactivate_mode(objects)
+            objects = self.deactivate_mode(objects, call_id)
 
         else:
             objects = self.activate_mode(objects)
@@ -576,7 +580,7 @@ class PerceptionManager:
 
         return objects
 
-    def deactivate_mode(self, objects):
+    def deactivate_mode(self, objects, call_id=None):
         """
         Object detection using server information directly.
 
@@ -593,14 +597,14 @@ class PerceptionManager:
             Updated object dictionary.
         """
         perception_start_time = time.time()
-        world = self.vehicle.get_world()
+        world = self.carla_world
 
         vehicle_list = world.get_actors().filter("*vehicle*")
         # todo: hard coded
-        thresh = 50 if not self.data_dump else 120
+        thresh = 100000 if not self.data_dump else 100000
 
         vehicle_list = [v for v in vehicle_list if self.dist(v) < thresh and
-                        v.id != self.id]
+                        v.id != self.id and v.id != call_id]
 
         # use semantic lidar to filter out vehicles out of the range
         if self.data_dump:

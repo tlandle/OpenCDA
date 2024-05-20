@@ -31,18 +31,18 @@ class MLManager(object):
 
     """
 
-    def __init__(self, rank):
+    def __init__(self, apply_ml, rank):
 
         #self.object_detector = torch.hub.load('ultralytics/yolov5', 'yolov5m', force_reload=True)
-        torch.cuda.empty_cache()
-        torch.cuda.memory_summary(device=None, abbreviated=False)
-        if os.path.exists(os.path.join(YOLO_PATH, YOLO_FILE)) && rank == 0:
+                #init_rpc("ml_manager", rank=0, world_size=2, rpc_backend_options=options)
+        if apply_ml:
+          torch.cuda.empty_cache()
+          torch.cuda.memory_summary(device=None, abbreviated=False)
+          if os.path.exists(os.path.join(YOLO_PATH, YOLO_FILE)) && rank == 0:
             self.object_detector = torch.hub.load(YOLO_PATH, model='yolov5m', source='local')
-        else:
+          else:
             self.object_detector = torch.hub.load('ultralytics/yolov5', 'yolov5m')
-        options = rpc.TensorPipeRpcBackendOptions(num_worker_threads=128) 
-        #init_rpc("ml_manager", rank=0, world_size=2, rpc_backend_options=options)
-        if rank == 0:
+          options = rpc.TensorPipeRpcBackendOptions(num_worker_threads=128) 
           rpc.init_rpc(
             "ml_manager",
             rank=rank,
@@ -50,12 +50,7 @@ class MLManager(object):
             rpc_backend_options=options
           )
         else:
-          rpc.init_rpc(
-            f"worker{rank}",
-            rank=rank,
-            world_size=2,
-            rpc_backend_options=options
-          )
+          rpc.sync()
         pass
 
 

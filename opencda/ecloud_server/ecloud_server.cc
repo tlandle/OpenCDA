@@ -101,6 +101,9 @@ using ecloud::ClientDebugHelper;
 using ecloud::Timestamps;
 using ecloud::WaypointRequest;
 using ecloud::EdgeWaypoints;
+using ecloud::ObjectBuffer;
+using ecloud::EdgeObstacleObject;
+using ecloud::ObjectRequest;
 
 std::atomic<int16_t> numCompletedVehicles_;
 std::atomic<int16_t> numRepliedVehicles_;
@@ -123,6 +126,8 @@ VehicleState vehState_;
 Command command_;
 
 std::vector<std::pair<int16_t, std::string>> serializedEdgeWaypoints_; // vehicleIdx, serializedWPBuffer
+std::vector<std::pair<int16_t, std::string>> serializedEdgeObjects_; // vehicleIdx, serializedObjBuffer
+
 
 absl::Mutex mu_;
 
@@ -299,13 +304,13 @@ public:
                                const WaypointRequest* request,
                                WaypointBuffer* buffer) override {
 
-        for ( int i = 0; i < serializedEdgeWaypoints_.size(); i++ )
+        for ( int i = 0; i < serializedEdgeObjects_.size(); i++ )
         {
             const std::pair<int16_t, std::string > wpPair = serializedEdgeWaypoints_[i];
             if ( wpPair.first == request->vehicle_index() )
             {
                 buffer->set_vehicle_index(request->vehicle_index());
-                WaypointBuffer wpBuf;
+                WaypointBuffer waypointBuf;
                 //LOG(INFO) << "Requesting vehicle " << request->vehicle_index() << " waypoints starting parse";
                 const std::string buf = wpPair.second;
                 wpBuf.ParseFromString(buf);
@@ -327,6 +332,42 @@ public:
         reactor->Finish(Status::OK);
         return reactor;
     }
+
+    //
+    // Clients grab objects before tick. 
+    //
+    ServerUnaryReactor* Client_GetObjects(CallbackServerContext* context,
+                               const ObjectRequest* request,
+                               ObjectBuffer* buffer) override {
+
+        for ( int i = 0; i < serializedEdgeObjects_.size(); i++ )
+        {
+            const std::pair<int16_t, std::string > objPair = serializedEdgeObjects_[i];
+            if ( objPair.first == request->vehicle_id() )
+            {
+                buffer->set_vehicle_id(request->vehicle_id());
+                ObjectBuffer objBuf;
+                //LOG(INFO) << "Requesting vehicle " << request->vehicle_index() << " waypoints starting parse";
+                const std::string buf = objPair.second;
+                objBuf.ParseFromString(buf);
+                //LOG(INFO) << "Requesting vehicle " << request->vehicle_index() << " waypoints parsed";
+                for ( EdgeObstacleObject obj : objBuf.object())
+                {
+                    EdgeObstacleObject *p = buffer->add_object();
+                    p->CopyFrom(obj);
+                    //LOG(INFO) << "Requesting vehicle " << request->vehicle_index() << " single waypoint copied";
+                }
+                //LOG(INFO) << "Requesting vehicle " << request->vehicle_index() << " all waypoints copied";
+                break;
+            }
+        }
+        //LOG(INFO) << "vehicle " << request->vehicle_index() << " waypoints sent";
+
+
+        ServerUnaryReactor* reactor = context->DefaultReactor();
+        reactor->Finish(Status::OK);
+        return reactor;
+    } 
 
     ServerUnaryReactor* Client_RegisterVehicle(CallbackServerContext* context,
                                const RegistrationInfo* request,
@@ -421,6 +462,7 @@ public:
         return reactor;
     }
 
+
     ServerUnaryReactor* Server_PushEdgeWaypoints(CallbackServerContext* context,
                                const EdgeWaypoints* edgeWaypoints,
                                Empty* empty) override {
@@ -441,6 +483,27 @@ public:
         reactor->Finish(Status::OK);
         return reactor;
     }
+
+    ServerUnaryReactor* Server_PushEdgeObjects(CallbackServerContext* context,
+                               const EdgeObstacleObjects* edgeObjects,
+                               Empty* empty) override {
+        serializedEdgObjects_.clear();
+
+        //LOG(INFO) << "updated waypoints received";
+        for ( ObjectBuffer objBuf : edgeObjects->all_objects() )
+        {   
+            std::string serializedObjs;
+            objBuf.SerializeToString(&serializedObjs);
+            const std::pair< int16_t, std::string > objPair = std::make_pair( objBuf.vehicle_id(), serializedObjs );
+            serializedEdgeWaypoints_.push_back(wpPair);
+            //LOG(INFO) << "updated waypoints for vehicle index " << wpBuf.vehicle_index();
+        }
+        //LOG(INFO) << "updated waypoints processed";
+
+        ServerUnaryReactor* reactor = context->DefaultReactor();
+        reactor->Finish(Status::OK);
+        return reactor;
+    } 
 
     ServerUnaryReactor* Server_StartScenario(CallbackServerContext* context,
                                const SimulationInfo* request,

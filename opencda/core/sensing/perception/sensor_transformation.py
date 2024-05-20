@@ -364,6 +364,7 @@ def project_lidar_to_camera(lidar, camera, point_cloud, rgb_image):
 
     # This (4, 4) matrix transforms the points from lidar space to world space.
     lidar_2_world = x_to_world_transformation(lidar.get_transform())
+    print(len(lidar_2_world))
 
     # transform lidar points from lidar space to world space
     world_points = np.dot(lidar_2_world, local_lidar_points)
@@ -391,6 +392,7 @@ def project_lidar_to_camera(lidar, camera, point_cloud, rgb_image):
     K = get_camera_intrinsic(camera)
     # project the 3d points in camera space to image space
     points_2d = np.dot(K, point_in_camera_coords)
+    print(len(points_2d))
 
     # normalize x,y,z
     points_2d = np.array([
@@ -410,6 +412,8 @@ def project_lidar_to_camera(lidar, camera, point_cloud, rgb_image):
         (points_2d[:, 2] > 0.0)
     new_points_2d = points_2d[points_in_canvas_mask]
     new_intensity = intensity[points_in_canvas_mask]
+
+    print(len(new_points_2d))
 
     # Extract the screen coords (uv) as integers.
     u_coord = new_points_2d[:, 0].astype(np.int)

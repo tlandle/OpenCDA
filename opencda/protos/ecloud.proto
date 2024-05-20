@@ -176,6 +176,40 @@ message EcloudResponse {
     repeated VehicleUpdate vehicle_update = 2;
 }
 
+//message ObjectBuffer {
+//  int32 vehicle_id = 1;
+//  repeated byte
+//}
+
+message ObstacleBoundingBox {
+  int32 center_x = 1;
+  int32 center_y = 2;
+  int32 center_z = 3;
+  int32 extent_x = 4;
+  int32 extent_y = 5;
+  int32 extent_z = 6;
+}
+
+message ObjectBuffer {
+  int32 vehicle_id = 1;
+  repeated EdgeObstacleObject object = 2;
+}
+
+message EdgeObstacleObject {
+  ObstacleBoundingBox bounding_box = 1;
+  Location location = 2;
+  int32 carla_id = 3;
+  Velocity velocity = 4;
+}
+
+message ObjectRequest {
+  int32 vehicle_index = 1;
+}
+
+message EdgeObjects {
+  repeated ObjectBuffer all_object_buffers = 1;
+}
+
 service Ecloud {
   // PUSH
   rpc PushTick(Tick) returns (Empty);
@@ -183,10 +217,12 @@ service Ecloud {
   rpc Client_SendUpdate (VehicleUpdate) returns (Empty);
   rpc Client_RegisterVehicle (RegistrationInfo) returns (SimulationInfo);
   rpc Client_GetWaypoints(WaypointRequest) returns (WaypointBuffer);
+  rpc Client_GetObjects(ObjectRequest) returns (ObjectBuffer);
   // SERVER
   rpc Server_DoTick(Tick) returns (Empty);
   rpc Server_StartScenario(SimulationInfo) returns (Empty);
   rpc Server_EndScenario(Empty) returns (Empty);
   rpc Server_GetVehicleUpdates(Empty) returns (EcloudResponse);
   rpc Server_PushEdgeWaypoints(EdgeWaypoints) returns (Empty);
+  rpc Server_PushEdgeObjects(EdgeObjects) returns (Empty);
 }

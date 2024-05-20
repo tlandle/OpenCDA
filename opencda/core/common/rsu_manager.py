@@ -83,9 +83,11 @@ class RSUManager(object):
         self.perception_manager = PerceptionManager(vehicle=None,
                                                     config_yaml=sensing_config['perception'],
                                                     cav_world=cav_world,
-                                                    carla_world=carla_world,
+                                                    carla_world = carla_world,
                                                     data_dump=data_dumping,
                                                     infra_id=self.rid)
+        self.objects = {}
+
         if data_dumping:
             self.data_dumper = DataDumper(self.perception_manager,
                                           self.rid,
@@ -101,13 +103,14 @@ class RSUManager(object):
         retrieve surrounding info an ego position.
         """
         # localization
+        self.objects.clear()
         self.localizer.localize()
 
         ego_pos = self.localizer.get_ego_pos()
         ego_spd = self.localizer.get_ego_spd()
 
         # object detection todo: pass it to other CAVs for V2X percetion
-        objects = self.perception_manager.detect(ego_pos)
+        self.objects = self.perception_manager.detect(ego_pos)
 
     def run_step(self):
         """

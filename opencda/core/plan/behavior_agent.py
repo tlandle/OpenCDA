@@ -15,6 +15,7 @@ import logging
 import opencda.logging_ecloud
 import numpy as np
 import carla
+import coloredlogs
 
 from opencda.core.common.misc import get_speed, positive, cal_distance_angle
 from opencda.core.plan.collision_check import CollisionChecker
@@ -24,6 +25,7 @@ from opencda.core.plan.global_route_planner_dao import GlobalRoutePlannerDAO
 from opencda.core.plan.planer_debug_helper import PlanDebugHelper
 
 logger = logging.getLogger(__name__)
+coloredlogs.install(level='DEBUG', logger=logger)
 
 SET_DESTINATION_WAYPOINT_LIMIT = 16 # TODO: move to config
 
@@ -178,10 +180,10 @@ class BehaviorAgent(object):
         # update the localization info to trajectory planner
         self.get_local_planner().update_information(ego_pos, ego_speed)
 
-        self.objects = objects
         # current version only consider about vehicles
         obstacle_vehicles = objects['vehicles']
         self.obstacle_vehicles = self.white_list_match(obstacle_vehicles)
+        #print(self.obstacle_vehicles)
 
         # update the debug helper
         self.debug_helper.update(ego_speed, self.ttc)
@@ -283,7 +285,9 @@ class BehaviorAgent(object):
             self.get_local_planner().get_history_buffer().clear()
 
         self.start_waypoint = self._map.get_waypoint(start_location)
-
+        logger.debug("Start Location: (%s, %s, %s)" %(start_location.x, start_location.y, start_location.z))
+        logger.debug("Start Location Waypoint: (%s, %s, %s) (%s)" %(self.start_waypoint.transform.location.x, self.start_waypoint.transform.location.y, self.start_waypoint.transform.location.z, self.start_waypoint.transform.rotation.yaw))
+        """
         # make sure the start waypoint is behind the vehicle
         waypoint_attempts = 0
         unable_to_find_wp = False
@@ -298,7 +302,7 @@ class BehaviorAgent(object):
                 _, angle = cal_distance_angle(
                     self.start_waypoint.transform.location, cur_loc, cur_yaw)
                 waypoint_attempts += 1
-                #logger("%s is %s degrees from current loc %s | %s" % (self.start_waypoint.transform.location, angle, cur_loc, cur_yaw))
+                logger.debug("%s is %s degrees from current loc %s | %s" % (self.start_waypoint.transform.location, angle, cur_loc, cur_yaw))
                 if waypoint_attempts == waypoint_limit:
                     unable_to_find_wp = True
                     logger.error("unable to find valid start waypoint based on current location of %s, yaw = %s", cur_loc, cur_yaw)
@@ -306,8 +310,10 @@ class BehaviorAgent(object):
 
         if unable_to_find_wp:
             return -1
-
+        """
         end_waypoint = self._map.get_waypoint(end_location)
+        logger.debug("End Location: (%s, %s, %s)" %(end_location.x, end_location.y, end_location.z))
+        logger.debug("End Location Waypoint: (%s, %s, %s)" %(end_waypoint.transform.location.x, end_waypoint.transform.location.y, end_waypoint.transform.location.z))
         if end_reset:
             self.end_waypoint = end_waypoint
 
@@ -458,6 +464,7 @@ class BehaviorAgent(object):
             collision_free = self._collision_check.collision_circle_check(
                 rx, ry, ryaw, vehicle, self._ego_speed / 3.6, self._map,
                 adjacent_check=adjacent_check)
+            print("Collision Free: %s" %collision_free)
             if not collision_free:
                 vehicle_state = True
 

@@ -63,7 +63,10 @@ class StaticObstacle(object):
 
         self.bounding_box = BoundingBox(corner)
         self.o3d_bbx = o3d_bbx
+        self.location = self.bounding_box.location
 
+    def get_location(self):
+        return self.location
 
 class TrafficLight(object):
     """

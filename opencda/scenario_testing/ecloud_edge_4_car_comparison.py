@@ -30,6 +30,18 @@ from opencda.scenario_testing.utils.yaml_utils import load_yaml
 from opencda.core.common.cav_world import CavWorld
 from opencda.scenario_testing.evaluations.evaluate_manager import \
     EvaluationManager
+
+#from scenario_runner.srunner.scenarioconfigs.openscenario_configuration import OpenScenarioConfiguration 
+#from scenario_runner.srunner.scenariomanager.carla_data_provider import CarlaDataProvider 
+#from scenario_runner.srunner.scenariomanager.scenario_manager import ScenarioManager 
+#from scenario_runner.srunner.scenarios.open_scenario import OpenScenario 
+#from scenario_runner.srunner.scenarios.route_scenario import RouteScenario 
+#from scenario_runner.srunner.tools.scenario_parser import ScenarioConfigurationParser 
+#from scenario_runner.srunner.tools.route_parser import RouteParser 
+#from scenario_runner.srunner.tools.osc2_helper import OSC2Helper 
+#from scenario_runner.srunner.scenarios.osc2_scenario import OSC2Scenario 
+#from scenario_runner.srunner.scenarioconfigs.osc2_scenario_configuration import OSC2ScenarioConfiguration 
+
 # ONLY *required* for 2 Lane highway scenarios
 # import opencda.scenario_testing.utils.customized_map_api as map_api
 
@@ -39,7 +51,7 @@ import ecloud_pb2 as ecloud
 LOG_NAME = "ecloud_4lane.log" # data drive from file name?
 SCENARIO_NAME = "ecloud_4lane_scenario" # data drive from file name?
 TOWN = 'Town06'
-STEP_COUNT = 300
+STEP_COUNT = 600
 
 def run_scenario(opt, scenario_params):
     step = 0
@@ -54,7 +66,7 @@ def run_scenario(opt, scenario_params):
         # spectator configs
         world_x = scenario_params['world']['x_pos'] if 'x_pos' in scenario_params['world'] else 0 
         world_y = scenario_params['world']['y_pos'] if 'y_pos' in scenario_params['world'] else 0
-        world_z = scenario_params['world']['z_pos'] if 'z_pos' in scenario_params['world'] else 256
+        world_z = scenario_params['world']['z_pos'] if 'z_pos' in scenario_params['world'] else 128
         world_roll = scenario_params['world']['roll'] if 'roll' in scenario_params['world'] else 0
         world_pitch = scenario_params['world']['pitch'] if 'pitch' in scenario_params['world'] else -90
         world_yaw = scenario_params['world']['yaw'] if 'yaw' in scenario_params['world'] else 0
@@ -71,6 +83,7 @@ def run_scenario(opt, scenario_params):
                                                    town=TOWN,
                                                    cav_world=cav_world,
                                                    distributed=run_distributed)
+				#scenario_runner.srunner_scenario_manager = ScenarioManager()
 
         if opt.record:
             scenario_manager.client. \
@@ -87,8 +100,8 @@ def run_scenario(opt, scenario_params):
                 scenario_manager.create_vehicle_manager(application=['single'])
 
         # create background traffic in carla
-        traffic_manager, bg_veh_list = \
-            scenario_manager.create_traffic_carla()
+        #traffic_manager, bg_veh_list = \
+            #scenario_manager.create_traffic_carla()
 
         # create evaluation manager
         eval_manager = \

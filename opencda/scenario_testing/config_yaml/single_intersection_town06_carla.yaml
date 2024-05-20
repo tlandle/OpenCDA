@@ -8,14 +8,15 @@ description: |-
 vehicle_base:
   sensing:
     perception:
-      camera:
-        visualize: 0
-        num: 0 # how many cameras are mounted on the vehicle. Maximum 3(frontal, left and right cameras)
+      #camera:
+        #visualize: 0
+        #num: 0 # how many cameras are mounted on the vehicle. Maximum 3(frontal, left and right cameras)
         # relative positions (x,y,z,yaw) of the camera. len(positions) should be equal to camera num
-        positions: []
+        #positions: []
+      activate: false
   behavior:
     max_speed: 50 # maximum speed, km/h
-    ignore_traffic_light: false # whether to ignore traffic light
+    ignore_traffic_light: true # whether to ignore traffic light
     collision_time_ahead: 2.0 # used for collision checking
 
 # define the background traffic control by carla
@@ -24,6 +25,7 @@ carla_traffic_manager:
   vehicle_list: ~  # a number or a list
   # Used only when vehicle_list is a number.
   # x_min, x_max, y_min, y_max, x_step, y_step, veh_num
+  ignore_traffic_light: true
   range:
     - [ 2, 10, 0, 200, 3.5, 25, 30]
 

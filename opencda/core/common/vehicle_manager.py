@@ -16,7 +16,8 @@ import weakref
 
 import carla
 import numpy as np
-
+from omegaconf import OmegaConf
+from omegaconf.listconfig import ListConfig
 from opencda.core.common.cav_world import CavWorld
 from opencda.core.actuation.control_manager \
     import ControlManager
@@ -132,7 +133,9 @@ class VehicleManager(object):
         self.scenario_params = config_yaml
         self.carla_version = carla_version
         self.perception_active = perception_active
+        self.rsu_manager = None
 
+        self.edge_objects = {}
         # set random seed if stated
         seed = time.time()
         if 'seed' in config_yaml['world']:
@@ -148,8 +151,9 @@ class VehicleManager(object):
         edge_sets_destination = False
         if not is_edge:
             cav_config = self.scenario_params['scenario']['single_cav_list'][vehicle_index] if location_type == eLocationType.EXPLICIT \
-                        else self.scenario_params['scenario']['single_cav_list'][0]
-
+                        else self.scenario_params['scenario']['single_cav_list'][0] 
+            cav_config = OmegaConf.merge(self.scenario_params['vehicle_base'],
+                                         cav_config)
         #print(cav_config)
 
         # ORIGINAL FLOW
@@ -160,6 +164,18 @@ class VehicleManager(object):
             assert( carla_world is not None )
             self.world = carla_world
             self.carla_map = self.world.get_map()
+
+            if is_edge:
+                assert('edge_list' in self.scenario_params['scenario'])
+                # TODO: support multiple edges...
+                cav_config = self.scenario_params['scenario']['edge_list'][0]['vehicles'][vehicle_index]
+                logger.debug(cav_config)
+                edge_sets_destination = self.scenario_params['scenario']['edge_list'][0]['edge_sets_destination'] \
+                    if 'edge_sets_destination' in self.scenario_params['scenario']['edge_list'][0] else False
+
+            else:
+                assert(False, "no known vehicle indexing format found")
+
  
         # eCLOUD BEGIN
 
@@ -173,7 +189,7 @@ class VehicleManager(object):
             if is_edge:
                 assert('edge_list' in self.scenario_params['scenario'])
                 # TODO: support multiple edges...
-                cav_config = self.scenario_params['scenario']['edge_list'][0]['members'][vehicle_index]
+                cav_config = self.scenario_params['scenario']['edge_list'][0]['vehicles'][vehicle_index]
                 logger.debug(cav_config)
                 edge_sets_destination = self.scenario_params['scenario']['edge_list'][0]['edge_sets_destination'] \
                     if 'edge_sets_destination' in self.scenario_params['scenario']['edge_list'][0] else False
@@ -207,6 +223,8 @@ class VehicleManager(object):
                         self.destination['x'] = cav_config['destination'][0]
                         self.destination['y'] = cav_config['destination'][1]
                         self.destination['z'] = cav_config['destination'][2]
+
+                    print("Destination: (%s, %s, %s)" %(self.destination['x'], self.destination['y'], self.destination['z']))
 
                     self.destination_location = carla.Location(
                             x=self.destination['x'],
@@ -339,6 +357,10 @@ class VehicleManager(object):
 
         cav_world.update_vehicle_manager(self)
         logger.debug("VehicleManager __init__ complete")
+
+    def set_rsu_manager(self, rsu_manager):
+      self.rsu_manager = rsu_manager
+      print(self.rsu_manager)
 
     
     @staticmethod
@@ -481,6 +503,11 @@ class VehicleManager(object):
         # object detection
         start_time = time.time()
         objects = self.perception_manager.detect(ego_pos)
+        objects = {**objects ,  **self.edge_objects}
+ 
+       # if self.rsu_manager:
+          #objects = {**objects ,  **self.rsu_manager.perception_manager.detect(ego_pos, self.vehicle.id)}
+        print(objects)
         end_time = time.time()
         logger.debug("Perception time: %s" %(end_time - start_time))
         self.debug_helper.update_perception_time((end_time-start_time)*1000)
@@ -534,7 +561,7 @@ class VehicleManager(object):
             self.map_manager.run_step()
 
         except Exception as e:
-            logger.warning("can't successfully complete agent.run_step; setting to done. Error: ", e)
+            logger.warning("can't successfully complete agent.run_step; setting to done. Error: %s" %(e))
             target_speed = 0
             ego_pos = self.localizer.get_ego_pos()
             target_pos = ego_pos.location
