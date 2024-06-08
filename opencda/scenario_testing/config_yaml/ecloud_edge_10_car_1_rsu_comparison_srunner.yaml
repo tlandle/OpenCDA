@@ -232,52 +232,52 @@ scenario:
           <<: *base_local_planner
           debug_trajectory: true
           debug: false
-#    - <<: *vehicle_base
-#      spawn_position: [145.52, -19.79, 0.3, 0, -180, 0]
-#      destination: [-130, -15.79, 0.3]
-#      sensing:
-#        <<: *base_sensing
-#        perception:
-#          <<: *base_perception
-#        localization:
-#          <<: *base_localize
-#          debug_helper:
-#            <<: *loc_debug_helper
-#            show_animation: false
-#      v2x:
-#        <<: *base_v2x
-#        communication_range: 35
-#      behavior:
-#        <<: *base_behavior
-#        max_speed: 100
-#        overtake_allowed: true
-#        local_planner:
-#          <<: *base_local_planner
-#          debug_trajectory: true
-#          debug: false
-#    - <<: *vehicle_base
-#      spawn_position: [145.52, -15.79, 0.3, 0, -180, 0]
-#      destination: [-130, -15.79, 0.3]
-#      sensing:
-#        <<: *base_sensing
-#        perception:
-#          <<: *base_perception
-#        localization:
-#          <<: *base_localize
-#          debug_helper:
-#            <<: *loc_debug_helper
-#            show_animation: false
-#      v2x:
-#        <<: *base_v2x
-#        communication_range: 35
-#      behavior:
-#        <<: *base_behavior
-#        max_speed: 100
-#        overtake_allowed: true
-#        local_planner:
-#          <<: *base_local_planner
-#          debug_trajectory: true
-#          debug: false
+    - <<: *vehicle_base
+      spawn_position: [145.52, -19.79, 0.3, 0, -180, 0]
+      destination: [-130, -15.79, 0.3]
+      sensing:
+        <<: *base_sensing
+        perception:
+          <<: *base_perception
+        localization:
+          <<: *base_localize
+          debug_helper:
+            <<: *loc_debug_helper
+            show_animation: false
+      v2x:
+        <<: *base_v2x
+        communication_range: 35
+      behavior:
+        <<: *base_behavior
+        max_speed: 100
+        overtake_allowed: true
+        local_planner:
+          <<: *base_local_planner
+          debug_trajectory: true
+          debug: false
+    - <<: *vehicle_base
+      spawn_position: [145.52, -15.79, 0.3, 0, -180, 0]
+      destination: [-130, -15.79, 0.3]
+      sensing:
+        <<: *base_sensing
+        perception:
+          <<: *base_perception
+        localization:
+          <<: *base_localize
+          debug_helper:
+            <<: *loc_debug_helper
+            show_animation: false
+      v2x:
+        <<: *base_v2x
+        communication_range: 35
+      behavior:
+        <<: *base_behavior
+        max_speed: 100
+        overtake_allowed: true
+        local_planner:
+          <<: *base_local_planner
+          debug_trajectory: true
+          debug: false
     - <<: *vehicle_base
       spawn_position: [155.60, -15.79, 0.3, 0, -180, 0]
       destination: [-110, -15.79, 0.3]
@@ -301,29 +301,29 @@ scenario:
           <<: *base_local_planner
           debug_trajectory: true
           debug: false
-#    - <<: *vehicle_base
-#      spawn_position: [205.52, -19.79, 0.3, 0, -180, 0]
-#      destination: [-130, -15.79, 0.3]
-#      sensing:
-#        <<: *base_sensing
-#        perception:
-#          <<: *base_perception
-#        localization:
-#          <<: *base_localize
-#          debug_helper:
-#            <<: *loc_debug_helper
-#            show_animation: false
-#      v2x:
-#        <<: *base_v2x
-#        communication_range: 35
-#      behavior:
-#        <<: *base_behavior
-#        max_speed: 100
-#        overtake_allowed: true
-#        local_planner:
-#          <<: *base_local_planner
-#          debug_trajectory: true
-#          debug: false
+    - <<: *vehicle_base
+      spawn_position: [205.52, -19.79, 0.3, 0, -180, 0]
+      destination: [-130, -15.79, 0.3]
+      sensing:
+        <<: *base_sensing
+        perception:
+          <<: *base_perception
+        localization:
+          <<: *base_localize
+          debug_helper:
+            <<: *loc_debug_helper
+            show_animation: false
+      v2x:
+        <<: *base_v2x
+        communication_range: 35
+      behavior:
+        <<: *base_behavior
+        max_speed: 100
+        overtake_allowed: true
+        local_planner:
+          <<: *base_local_planner
+          debug_trajectory: true
+          debug: false
 #    - <<: *vehicle_base
 #      spawn_position: [185.52, -19.79, 0.3, 0, -180, 0]
 #      destination: [-130, -15.79, 0.3]

@@ -350,6 +350,8 @@ def project_lidar_to_camera(lidar, camera, point_cloud, rgb_image):
 
     """
 
+
+    print("Input PC Len: %s" %len(point_cloud))
     # Lidar intensity array of shape (p_cloud_size,) but, for now, let's
     # focus on the 3D points.
     intensity = np.array(point_cloud[:, 3])
@@ -364,7 +366,7 @@ def project_lidar_to_camera(lidar, camera, point_cloud, rgb_image):
 
     # This (4, 4) matrix transforms the points from lidar space to world space.
     lidar_2_world = x_to_world_transformation(lidar.get_transform())
-    print(len(lidar_2_world))
+    #print(len(lidar_2_world.T))
 
     # transform lidar points from lidar space to world space
     world_points = np.dot(lidar_2_world, local_lidar_points)
@@ -392,13 +394,15 @@ def project_lidar_to_camera(lidar, camera, point_cloud, rgb_image):
     K = get_camera_intrinsic(camera)
     # project the 3d points in camera space to image space
     points_2d = np.dot(K, point_in_camera_coords)
-    print(len(points_2d))
+    #print(len(points_2d.T))
 
     # normalize x,y,z
     points_2d = np.array([
         points_2d[0, :] / points_2d[2, :],
         points_2d[1, :] / points_2d[2, :],
         points_2d[2, :]])
+
+    #print("Normalized: %s" %len(points_2d.T))
 
     image_w = int(camera.attributes['image_size_x'])
     image_h = int(camera.attributes['image_size_y'])
@@ -413,7 +417,7 @@ def project_lidar_to_camera(lidar, camera, point_cloud, rgb_image):
     new_points_2d = points_2d[points_in_canvas_mask]
     new_intensity = intensity[points_in_canvas_mask]
 
-    print(len(new_points_2d))
+    #print("New Points %s" %len(new_points_2d))
 
     # Extract the screen coords (uv) as integers.
     u_coord = new_points_2d[:, 0].astype(np.int)
@@ -431,5 +435,7 @@ def project_lidar_to_camera(lidar, camera, point_cloud, rgb_image):
     for i in range(len(new_points_2d)):
         rgb_image[v_coord[i] - 1: v_coord[i] + 1,
                   u_coord[i] - 1: u_coord[i] + 1] = color_map[i]
+
+    #print("Output projected lidar: %s" %len(points_2d))
 
     return rgb_image, points_2d

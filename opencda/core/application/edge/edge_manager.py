@@ -113,45 +113,46 @@ class EdgeManager(object):
         self.numlanes = config_yaml['num_lanes'] if 'num_lanes' in config_yaml else 4
 
     def start_edge(self):
-      self.get_four_lane_waypoints_dict()
-      print("Got Waypoints")
-      self.processor = transform_processor(self.waypoints_dict)
-      print("Edge: Waypoints transformed")
-      _, _ = self.processor.process_waypoints_bidirectional(0)
-      print("Edge: Waypoints processed")
-      inverted = self.processor.process_forward(0)
-      print(len(inverted))
-      i = 0
+      if(self.activate == "MANEUVER"):
+        self.get_four_lane_waypoints_dict()
+        print("Got Waypoints")
+        self.processor = transform_processor(self.waypoints_dict)
+        print("Edge: Waypoints transformed")
+        _, _ = self.processor.process_waypoints_bidirectional(0)
+        print("Edge: Waypoints processed")
+        inverted = self.processor.process_forward(0)
+        print(len(inverted))
+        i = 0
 
-      # for k in inverted:
-      #     if k[0,0] <= 0 and k[0,0] < -self.secondary_offset:
-      #       print("Current indice is: ", k[0,0])
-      #       self.secondary_offset = -k[0,0]
+        # for k in inverted:
+        #     if k[0,0] <= 0 and k[0,0] < -self.secondary_offset:
+        #       print("Current indice is: ", k[0,0])
+        #       self.secondary_offset = -k[0,0]
 
-      for vehicle_manager in self.vehicle_manager_list:
-          spawn_coords = vehicle_manager.vehicle.get_location()
-          spawn_coords = np.array([spawn_coords.x,spawn_coords.y]).reshape((2,1))
-          print("Spawn Coords before transform")
-          print(spawn_coords)
-          spawn_coords = self.processor.process_single_waypoint_forward(spawn_coords[0,0],spawn_coords[1,0])
-          print("Spawn Coords after Transform")
-          print(spawn_coords)
-          # sys.exit()
-          # self.spawn_x.append(vehicle_manager.vehicle.get_location().x)
-          # self.spawn_y.append(vehicle_manager.vehicle.get_location().y)
-          #self.spawn_v.append(vehicle_manager.vehicle.get_velocity())
-          ## THIS IS TEMPORARY ##
-          # print("inverted is: ", inverted[i][0,0])
-          # print("revised x is: ", self.secondary_offset)
-          self.spawn_x.append(spawn_coords[0]) # inverted[i][0,0]+self.secondary_offset)
-          #self.spawn_v.append(5*(i+1))
-          self.spawn_v.append(0)
-          self.spawn_y.append(spawn_coords[1])# inverted[i][1,0])
-          i += 1
+        for vehicle_manager in self.vehicle_manager_list:
+            spawn_coords = vehicle_manager.vehicle.get_location()
+            spawn_coords = np.array([spawn_coords.x,spawn_coords.y]).reshape((2,1))
+            print("Spawn Coords before transform")
+            print(spawn_coords)
+            spawn_coords = self.processor.process_single_waypoint_forward(spawn_coords[0,0],spawn_coords[1,0])
+            print("Spawn Coords after Transform")
+            print(spawn_coords)
+            # sys.exit()
+            # self.spawn_x.append(vehicle_manager.vehicle.get_location().x)
+            # self.spawn_y.append(vehicle_manager.vehicle.get_location().y)
+            #self.spawn_v.append(vehicle_manager.vehicle.get_velocity())
+            ## THIS IS TEMPORARY ##
+            # print("inverted is: ", inverted[i][0,0])
+            # print("revised x is: ", self.secondary_offset)
+            self.spawn_x.append(spawn_coords[0]) # inverted[i][0,0]+self.secondary_offset)
+            #self.spawn_v.append(5*(i+1))
+            self.spawn_v.append(0)
+            self.spawn_y.append(spawn_coords[1])# inverted[i][1,0])
+            i += 1
 
-          # TODO: DIST --> do we need to clear at start in containers?
-          #vehicle_manager.agent.get_local_planner().get_waypoint_buffer().clear() # clear waypoint buffer at start
-      self.Traffic_Tracker = Traffic(self.search_dt,self.numlanes,numcars=self.numcars,map_length=200,x_initial=self.spawn_x,y_initial=self.spawn_y,v_initial=self.spawn_v)
+            # TODO: DIST --> do we need to clear at start in containers?
+            #vehicle_manager.agent.get_local_planner().get_waypoint_buffer().clear() # clear waypoint buffer at start
+        self.Traffic_Tracker = Traffic(self.search_dt,self.numlanes,numcars=self.numcars,map_length=200,x_initial=self.spawn_x,y_initial=self.spawn_y,v_initial=self.spawn_v)
 
     def get_four_lane_waypoints_dict(self):
       world = self.carla_client.get_world()
@@ -351,23 +352,24 @@ class EdgeManager(object):
         # logger.debug("Vehicle Manager Update Info Time: %s", (end_time - start_time))
         start_time = time.time()
         for i in range(len(self.vehicle_manager_list)):
-            x,y = self.processor.process_single_waypoint_forward(self.vehicle_manager_list[i].vehicle.get_location().x, self.vehicle_manager_list[i].vehicle.get_location().y)
-            v = self.vehicle_manager_list[i].vehicle.get_velocity()
-            v_scalar = math.sqrt(v.x**2 + v.y**2 + v.z**2)
-            self.spawn_x.append(x)
-            self.spawn_y.append(y)
-            self.spawn_v.append(v_scalar)
+            if(self.activate == "MANEUVER"):
+              x,y = self.processor.process_single_waypoint_forward(self.vehicle_manager_list[i].vehicle.get_location().x, self.vehicle_manager_list[i].vehicle.get_location().y)
+              v = self.vehicle_manager_list[i].vehicle.get_velocity()
+              v_scalar = math.sqrt(v.x**2 + v.y**2 + v.z**2)
+              self.spawn_x.append(x)
+              self.spawn_y.append(y)
+              self.spawn_v.append(v_scalar)
             print(self.vehicle_manager_list[i].agent.objects)
             #self.objects =  {**self.objects,  **self.vehicle_manager_list[i].agent.objects}
             print(self.objects)
-            logger.info("update_information for vehicle_%s - x:%s, y:%s", i, x, y)
+            #logger.info("update_information for vehicle_%s - x:%s, y:%s", i, x, y)
         end_time = time.time()
         logger.debug("Update Info Transform Forward Time: %s", (end_time - start_time))
         #print(self.spawn_x)
         #print(self.spawn_y)
         #print(self.spawn_v)
-        #for i in range(len(self.rsu_manager_list)):
-            #self.objects = {**self.objects, **self.rsu_manager_list[i].objects}
+        for i in range(len(self.rsu_manager_list)):
+            self.objects = {**self.objects, **self.rsu_manager_list[i].objects}
             #print(self.objects)
 
         print(self.objects)
@@ -376,11 +378,12 @@ class EdgeManager(object):
         start_time = time.time()
         #Added in to check if traffic tracker updating would fix waypoint deque issue
         # TODO: data drive num cars
-        self.Traffic_Tracker = Traffic(self.search_dt,self.numlanes,numcars=self.numcars,map_length=200,x_initial=self.spawn_x,y_initial=self.spawn_y,v_initial=self.spawn_v)
-        end_time = time.time()
-        print("Traffic Tracker Time: %s", (end_time - start_time))
+        if(self.activate == "MANEUVER"):
+          self.Traffic_Tracker = Traffic(self.search_dt,self.numlanes,numcars=self.numcars,map_length=200,x_initial=self.spawn_x,y_initial=self.spawn_y,v_initial=self.spawn_v)
+          end_time = time.time()
+          print("Traffic Tracker Time: %s", (end_time - start_time))
 
-        for i, car in enumerate(self.Traffic_Tracker.cars_on_road):
+          for i, car in enumerate(self.Traffic_Tracker.cars_on_road):
             print(i)
             print(self.vehicle_manager_list[i].agent.max_speed)
             car.target_velocity = self.vehicle_manager_list[i].agent.max_speed * 0.277778 # convert to m/s! NOT kph
@@ -546,10 +549,15 @@ class EdgeManager(object):
                 object_list.remove(obj)
           vehicle_manager.edge_objects.clear()
           vehicle_manager.edge_objects = objects_to_send
+          print(objects_to_send)
           vehicle_manager.update_info()
           control = vehicle_manager.run_step()
           vehicle_manager.vehicle.apply_control(control)
           print("Applied control")
+        for rsu in self.rsu_manager_list:
+          rsu.update_info()
+          rsu.run_step()
+
               
           
           

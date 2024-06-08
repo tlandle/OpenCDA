@@ -179,6 +179,7 @@ class BehaviorAgent(object):
         self.break_distance = self._ego_speed / 3.6 * self.emergency_param
         # update the localization info to trajectory planner
         self.get_local_planner().update_information(ego_pos, ego_speed)
+        self.objects = objects
 
         # current version only consider about vehicles
         obstacle_vehicles = objects['vehicles']
@@ -664,6 +665,7 @@ class BehaviorAgent(object):
         is_junc : boolean
             Whether there is any future waypoint in the junction shortly.
         """
+        print("Check intersection")
         for tl in objects['traffic_lights']:
             for wpt, _ in waypoint_buffer:
                 distance = \
@@ -797,6 +799,7 @@ class BehaviorAgent(object):
         ego_vehicle_loc = self._ego_pos.location
         ego_vehicle_wp = self._map.get_waypoint(ego_vehicle_loc)
         waipoint_buffer = self.get_local_planner().get_waypoint_buffer()
+        print(waipoint_buffer)
         # ttc reset to 1000 at the beginning
         self.ttc = 1000
         # when overtake_counter > 0, another overtake/lane change is forbidden
@@ -806,7 +809,8 @@ class BehaviorAgent(object):
         # we reset destination push flag for every n rounds
         if self.destination_push_flag > 0:
             self.destination_push_flag -= 1
-
+        
+        #print(self.objects)
         # use traffic light to detect intersection
         is_intersection = self.is_intersection(self.objects, waipoint_buffer)
 

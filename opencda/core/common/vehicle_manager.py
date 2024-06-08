@@ -360,7 +360,7 @@ class VehicleManager(object):
 
     def set_rsu_manager(self, rsu_manager):
       self.rsu_manager = rsu_manager
-      print(self.rsu_manager)
+      #print(self.rsu_manager)
 
     
     @staticmethod
@@ -504,10 +504,11 @@ class VehicleManager(object):
         start_time = time.time()
         objects = self.perception_manager.detect(ego_pos)
         objects = {**objects ,  **self.edge_objects}
+        print("Edge Objects", self.edge_objects)
  
        # if self.rsu_manager:
           #objects = {**objects ,  **self.rsu_manager.perception_manager.detect(ego_pos, self.vehicle.id)}
-        print(objects)
+        print("Objects: " , objects)
         end_time = time.time()
         logger.debug("Perception time: %s" %(end_time - start_time))
         self.debug_helper.update_perception_time((end_time-start_time)*1000)

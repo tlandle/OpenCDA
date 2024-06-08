@@ -533,19 +533,24 @@ class PerceptionManager:
         # rgb_images for drawing
         rgb_draw_images = []
 
+        lidar_data = self.lidar.data
+
         for (i, rgb_camera) in enumerate(self.rgb_camera):
             # lidar projection
+            #logger.debug("Lidar Input: %s" %len(lidar_data))
             rgb_image, projected_lidar = st.project_lidar_to_camera(
                 self.lidar.sensor,
-                rgb_camera.sensor, self.lidar.data, np.array(
+                rgb_camera.sensor, lidar_data, np.array(
                     rgb_camera.image))
             rgb_draw_images.append(rgb_image)
 
+            #logger.debug("Lidar Input to Fusion: %s" %len(lidar_data))
+            #logger.debug("Projection Input to Fusion %s" %len(projected_lidar))
             # camera lidar fusion
             objects = o3d_camera_lidar_fusion(
                 objects,
                 yolo_detection.xyxy[i],
-                self.lidar.data,
+                lidar_data,
                 projected_lidar,
                 self.lidar.sensor)
 
@@ -566,7 +571,7 @@ class PerceptionManager:
             cv2.waitKey(1)
 
         if self.lidar_visualize:
-            while self.lidar.data is None:
+            while lidar_data is None:
                 continue
             o3d_pointcloud_encode(self.lidar.data, self.lidar.o3d_pointcloud)
             o3d_visualizer_show(

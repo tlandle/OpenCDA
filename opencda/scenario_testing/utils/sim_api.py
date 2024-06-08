@@ -1168,11 +1168,13 @@ class ScenarioManager:
                       carla_world=self.world,
                       carla_map=self.carla_map, cav_world=self.cav_world,
                       current_time=self.scenario_params['current_time'],
-                      data_dumping=data_dump, is_edge=True, carla_version=self.carla_version)
+                      data_dumping=data_dump, is_edge=True, map_helper=map_helper,
+                      location_type = self.ecloud_config.get_location_type(),
+                      perception_active=self.apply_ml)
 
                 logger.debug("finished creating VehiceManagerProxy")
 
-                # self.tick_world()
+                self.world.tick()
 
                 # send gRPC with START info
                 self.application = application
@@ -1183,6 +1185,13 @@ class ScenarioManager:
                 # add the vehicle manager to platoon
                 edge_manager.add_member(vehicle_manager)
                 self.vehicle_managers[index] = vehicle_manager
+
+                vehicle_manager.update_info()
+                vehicle_manager.set_destination(
+                  vehicle_manager.vehicle.get_location(),
+                  vehicle_manager.destination_location,
+                  clean=True)
+
 
             try:
               self.tick_world()
