@@ -193,7 +193,7 @@ class LocalizationManager(object):
             self.speed_noise_std = config_yaml['gnss']['speed_stddev']
 
             self.dt = config_yaml['dt']
-            print("Kalman Value: %s",self.dt)
+            #print("Kalman Value: %s",self.dt)
             # Kalman Filter
             self.kf = KalmanFilter(self.dt)
 
@@ -222,8 +222,8 @@ class LocalizationManager(object):
 
             # only use this for debugging purpose
             location = self.vehicle.get_transform().location
-            print("GNSS Location: (%s, %s, %s)" %(x, y, z))
-            print("Actual Location: (%s, %s, %s)" %(location.x, location.y, location.z))
+            #print("GNSS Location: (%s, %s, %s)" %(x, y, z))
+            #print("Actual Location: (%s, %s, %s)" %(location.x, location.y, location.z))
 
             # We add synthetic noise to the heading direction
             rotation = self.vehicle.get_transform().rotation
@@ -242,8 +242,8 @@ class LocalizationManager(object):
                     self.imu.gyroscope[2])
                 self._speed = speed_kf * 3.6
                 heading_angle_kf = np.rad2deg(heading_angle_kf)
-            print("Calculated speed: ", self._speed)
-            print("Actual Speed: " , get_speed(self.vehicle))
+            #print("Calculated speed: ", self._speed)
+            #print("Actual Speed: " , get_speed(self.vehicle))
 
             # add data to debug helper
             self.debug_helper.run_step(x,
@@ -264,7 +264,7 @@ class LocalizationManager(object):
                 carla.Location(
                     x=x_kf, y=y_kf, z=z), carla.Rotation(
                     pitch=0, yaw=rotation.yaw, roll=0))
-            print("Final Pose(GNSS): (%s, %s, %s)" %(x_kf, y_kf, z))
+            #print("Final Pose(GNSS): (%s, %s, %s)" %(x_kf, y_kf, z))
 
             # save the track for future use
             self._ego_pos_history.append(self._ego_pos)

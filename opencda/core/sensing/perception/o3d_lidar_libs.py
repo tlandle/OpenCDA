@@ -210,8 +210,8 @@ def o3d_camera_lidar_fusion(objects,
             (projected_lidar[:, 1] > y1) & (projected_lidar[:, 1] < y2) & \
             (projected_lidar[:, 2] > 0.0)
         # ignore intensity channel
-        print(len(lidar_3d))
-        print(len(points_in_bbx))
+        #print(len(lidar_3d))
+        #print(len(points_in_bbx))
         select_points = lidar_3d[points_in_bbx][:, :-1]
         #select_points = lidar_3d[points_in_bbx]
 

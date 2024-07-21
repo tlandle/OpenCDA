@@ -377,9 +377,9 @@ class PerceptionManager:
 
         self._map = self.carla_world.get_map()
         self.id = infra_id if infra_id is not None else vehicle.id
-        print(carla_world)
+        #print(carla_world)
 
-        print(config_yaml)
+        #print(config_yaml)
         self.activate = config_yaml['activate']
         self.camera_visualize = config_yaml['camera']['visualize']
         self.camera_num = config_yaml['camera']['num']

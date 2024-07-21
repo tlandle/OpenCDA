@@ -467,11 +467,11 @@ class BehaviorAgent(object):
         target_vehicle = None
 
         for vehicle in self.obstacle_vehicles:
-            print("Self Vehicle Location: (%s, %s, %s)" %(self.vehicle.get_location().x, self.vehicle.get_location().y, self.vehicle.get_location().z))
+            logger.debug("Self Vehicle Location: (%s, %s, %s)" %(self.vehicle.get_location().x, self.vehicle.get_location().y, self.vehicle.get_location().z))
             collision_free = self._collision_check.collision_circle_check(
                 rx, ry, ryaw, vehicle, self._ego_speed / 3.6, self._map,
                 adjacent_check=adjacent_check)
-            print("Collision Free: %s" %collision_free)
+            logger.debug("Collision Free: %s" %collision_free)
             if not collision_free:
                 vehicle_state = True
 
@@ -486,7 +486,7 @@ class BehaviorAgent(object):
             collision_free = self._collision_check.collision_circle_check(
                 rx, ry, ryaw, obstacle, self._ego_speed / 3.6, self._map,
                 adjacent_check=adjacent_check)
-            print("Collision Free: %s" %collision_free)
+            logger.debug("Collision Free: %s" %collision_free)
             if not collision_free:
                 vehicle_state = True
 

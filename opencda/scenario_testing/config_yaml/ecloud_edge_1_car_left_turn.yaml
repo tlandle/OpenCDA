@@ -5,7 +5,7 @@ description: |-
            at Town12 using CARLA
 
 distributed: false
-define: &perception_is_active false
+define: &perception_is_active true
 perception_active: *perception_is_active
 
 # define carla simulation setting
@@ -29,7 +29,7 @@ world:
 vehicle_base: &vehicle_base
   sensing: &base_sensing
     perception: &base_perception
-      activate: false
+      activate: true
       camera:
         visualize: 0 # how many camera images need to be visualized. 0 means no visualization for camera
         num: 3 # how many cameras are mounted on the vehicle.
@@ -128,7 +128,7 @@ vehicle_base: &vehicle_base
 rsu_base: &rsu_base
   sensing:
     perception:
-      activate: false # when not activated, objects positions will be retrieved from server directly
+      activate: true # when not activated, objects positions will be retrieved from server directly
       camera:
         visualize: 0 # how many camera images need to be visualized. 0 means no visualization for camera
         num: 4 # how many cameras are mounted on the vehicle. Maximum 3(frontal, left and right cameras)
