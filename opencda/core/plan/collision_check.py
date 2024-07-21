@@ -168,11 +168,11 @@ class CollisionChecker:
             ryaw.append(sp.calc_yaw(i_s))
             debug_tmp.append(carla.Transform(carla.Location(ix, iy, 0)))
 
-        # draw yellow line for overtaking, white line for lane change
-        # draw_trajetory_points(
-        #     world, debug_tmp, color=carla.Color(
-        #         255, 255, 0) if overtake else carla.Color(
-        #         255, 255, 255), size=0.05, lt=0.2)
+        #draw yellow line for overtaking, white line for lane change
+        draw_trajetory_points(
+             world, debug_tmp, color=carla.Color(
+                 255, 255, 0) if overtake else carla.Color(
+                 255, 255, 255), size=0.05, lt=0.2)
 
         return rx, ry, ryaw
 
@@ -212,6 +212,7 @@ class CollisionChecker:
 
         obstacle_vehicle_loc = obstacle_vehicle.get_location()
         print("Obstacle_vehicle Location (%s, %s, %s)" %(obstacle_vehicle_loc.x, obstacle_vehicle_loc.y, obstacle_vehicle_loc.z))
+        #print("Self Location (%s, %s, %s)" %(
         obstacle_vehicle_yaw = \
             carla_map.get_waypoint(obstacle_vehicle_loc).transform.rotation.yaw
 
@@ -223,6 +224,8 @@ class CollisionChecker:
             circle_offsets = np.array(self._circle_offsets)
             circle_locations[:, 0] = ptx + circle_offsets * cos(yaw)
             circle_locations[:, 1] = pty + circle_offsets * sin(yaw)
+
+            #world.debug.draw_point(carla.Location(x=circle_locations[:,0], y = circle_locationss[:, -1], z=.5), size=3, life_time=2.0)
 
             # calculate bbx coords under world coordinate system
             corrected_extent_x = obstacle_vehicle.bounding_box.extent.x * \
@@ -261,7 +264,7 @@ class CollisionChecker:
             #print(collision_dists)
 
             if not collision_free:
-                print(collision_dists)
+                #print(collision_dists)
                 break
 
         return collision_free

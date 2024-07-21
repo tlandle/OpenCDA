@@ -53,10 +53,10 @@ from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
 import ecloud_pb2 as ecloud
 
 # Consts
-LOG_NAME = "ecloud_4lane.log" # data drive from file name?
-SCENARIO_NAME = "ecloud_4lane_scenario" # data drive from file name?
-TOWN = 'Town06'
-STEP_COUNT = 600
+LOG_NAME = "ecloud_left_turn.log" # data drive from file name?
+SCENARIO_NAME = "ecloud_left_turn_edge" # data drive from file name?
+TOWN = 'Town05'
+STEP_COUNT = 100000
 
 
 
@@ -68,7 +68,6 @@ def run_scenario(opt, scenario_params):
         scenario_params = add_current_time(scenario_params)
 
         # sanity checks...
-        assert('edge_list' not in scenario_params['scenario']) # do NOT use this template for edge scenarios
         assert('sync_mode' in scenario_params['world'] and scenario_params['world']['sync_mode'] == True)
         assert(scenario_params['world']['fixed_delta_seconds'] == 0.03 or scenario_params['world']['fixed_delta_seconds'] == 0.05)
         
@@ -102,31 +101,39 @@ def run_scenario(opt, scenario_params):
         # create single cavs        
         if run_distributed:
             asyncio.get_event_loop().run_until_complete(scenario_manager.run_comms())
-            single_cav_list = \
-                scenario_manager.create_distributed_vehicle_manager(application=['single']) 
-        else:    
-            single_cav_list = \
-                scenario_manager.create_vehicle_manager(application=['single'])
+            #single_cav_list = \
+            #    scenario_manager.create_distributed_vehicle_manager(application=['single']) 
+        #else:    
+            #single_cav_list = \
+                #scenario_manager.create_vehicle_manager(application=['single'])
 
 
-        rsu_list = \
-            scenario_manager.create_rsu_manager(data_dump=False)
+        #rsu_list = \
+            #scenario_manager.create_rsu_manager(data_dump=False)
 
         #print(rsu_list)
+
+
+        world_dt = scenario_params['world']['fixed_delta_seconds']
+        edge_dt = scenario_params['edge_base']['edge_dt']
+        assert( edge_dt % world_dt == 0 ) # we need edge time to be an exact multiple of world time because we send waypoints every Nth tick
+
+        edge_list = \
+             scenario_manager.create_edge_manager(application=['edge'], edge_dt=edge_dt, world_dt=world_dt)
 
         # create background traffic in carla
         #traffic_manager, bg_veh_list = \
             #scenario_manager.create_traffic_carla()
-        CarlaDataProvider.set_client(scenario_manager.client)
-        CarlaDataProvider.set_world(scenario_manager.world)
-        CarlaDataProvider.set_runtime_init_mode(False)
-        config = ScenarioConfiguration()
-        config.name = "Static Config"
+        #CarlaDataProvider.set_client(scenario_manager.client)
+        #CarlaDataProvider.set_world(scenario_manager.world)
+        #CarlaDataProvider.set_runtime_init_mode(False)
+        #config = ScenarioConfiguration()
+        #config.name = "Static Config"
                 
 
         # Red light runner
-        trigger_point = carla.Transform(carla.Location(3.33, -19, .1), carla.Rotation(0, 0, 90))
-        config.trigger_points.append(trigger_point)
+        #trigger_point = carla.Transform(carla.Location(3.33, -19, .1), carla.Rotation(0, 0, 90))
+        #config.trigger_points.append(trigger_point)
         
         # create evaluation manager
         eval_manager = \
@@ -143,13 +150,14 @@ def run_scenario(opt, scenario_params):
 
         scenario_manager.tick_world()
         ego_vehicles = []
-        for vehicle_manager in single_cav_list:
-          CarlaDataProvider.register_actor(vehicle_manager.vehicle)
-          ego_vehicles.append(vehicle_manager.vehicle)
+        for edge_manager in edge_list:
+          for vehicle_manager in edge_manager.vehicle_manager_list:
+            #CarlaDataProvider.register_actor(vehicle_manager.vehicle)
+            ego_vehicles.append(vehicle_manager.vehicle)
 
-        for i, single_cav in enumerate(single_cav_list):
+        #for i, single_cav in enumerate(single_cav_list):
           #single_cav.update_info()
-          single_cav.set_rsu_manager(rsu_list[0])
+          #single_cav.set_rsu_manager(rsu_list[0])
           #single_cav.vehicle.apply_control(control)
           #for rsu in rsu_list: 
           #  rsu.update_info() 
@@ -157,7 +165,7 @@ def run_scenario(opt, scenario_params):
 
 
         #scenario = OppositeVehicleRunningRedLight(scenario_manager.world, ego_vehicles, config)
-        scenario = StationaryObjectCrossing(scenario_manager.world, ego_vehicles, config)
+        #scenario = StationaryObjectCrossing(scenario_manager.world, ego_vehicles, config)
         print(scenario_manager.world.get_weather())
 
 
@@ -171,21 +179,20 @@ def run_scenario(opt, scenario_params):
             print("Step: %d" %step)
             scenario_manager.tick_world()
             CarlaDataProvider.on_carla_tick()
-            scenario.scenario_tree.tick_once()
-            py_trees.display.print_ascii_tree(scenario.scenario_tree, show_status=True) 
+            #scenario.scenario_tree.tick_once()
+            #py_trees.display.print_ascii_tree(scenario.scenario_tree, show_status=True) 
             if run_distributed:
                 flag = scenario_manager.broadcast_tick()
             
             else:    
                 # non-dist will break automatically; don't need to set flag
                 pre_client_tick_time = time.time()
-                for i, single_cav in enumerate(single_cav_list):
-                    single_cav.update_info()
-                    control = single_cav.run_step()
-                    single_cav.vehicle.apply_control(control)
-                for rsu in rsu_list: 
-                  rsu.update_info() 
-                  rsu.run_step()
+                for edge in edge_list:
+                    edge.update_information()
+                    edge.run_step()
+                #for rsu in rsu_list: 
+                  #rsu.update_info() 
+                  #rsu.run_step()
 
                 post_client_tick_time = time.time()
                 print("Client tick completion time: %s" %(post_client_tick_time - pre_client_tick_time))
@@ -193,7 +200,7 @@ def run_scenario(opt, scenario_params):
                     scenario_manager.debug_helper.update_client_tick((post_client_tick_time - pre_client_tick_time)*1000)
 
             # same for dist / non-dist - only required for specate
-            transform = single_cav_list[0].vehicle.get_transform()
+            transform = edge_list[0].vehicle_manager_list[1].vehicle.get_transform()
             spectator.set_transform(carla.Transform(
                 transform.location +
                 carla.Location(
@@ -215,8 +222,8 @@ def run_scenario(opt, scenario_params):
         if run_distributed:
             scenario_manager.end() # only dist requires explicit scenario end call
 
-        #if step >= STEP_COUNT:
-        eval_manager.evaluate()
+        if step >= STEP_COUNT:
+            eval_manager.evaluate()
 
         if opt.record:
             scenario_manager.client.stop_recorder()
@@ -224,7 +231,7 @@ def run_scenario(opt, scenario_params):
         scenario_manager.close()
   
         if not run_distributed:
-            for v in single_cav_list:
+            for v in edge_list:
                 v.destroy()
 
         for v in bg_veh_list:

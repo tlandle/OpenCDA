@@ -452,6 +452,7 @@ class ScenarioManager:
             self.world = load_customized_world(xodr_path, self.client)
         elif town:
             try:
+                print(self.client.get_available_maps())
                 self.world = self.client.load_world(town)
             except RuntimeError:
                 logger.error(
@@ -672,6 +673,7 @@ class ScenarioManager:
             self.world.tick()
 
             vehicle_manager.v2x_manager.set_platoon(None)
+            self.vehicle_managers[vehicle_index] = vehicle_manager
 
             vehicle_manager.update_info()
             vehicle_manager.set_destination(
@@ -1439,7 +1441,31 @@ class ScenarioManager:
           return
         self.do_pickling(client_data_key, all_client_data_list_flat, cumulative_stats_folder_path)
 
-    def evaluate(self, excludes_list = ['client_collisons_list', 'client_lane_invasions_list']):
+    def evaluate_collision_data(self, cumulative_stats_folder_path):
+        all_client_data_list = []
+        for _, vehicle_manager_proxy in self.vehicle_managers.items():
+            client_data_list = vehicle_manager_proxy.debug_helper.get_debug_data()["client_collisons_list"]
+            for collision_event in client_data_list:
+              all_client_data_list.append()
+
+        logger.debug(all_client_data_list)
+
+        
+        #logger.debug(all_client_data_list)
+
+        all_client_data_list_flat = np.array(all_client_data_list)
+        if all_client_data_list_flat.any():
+            all_client_data_list_flat = np.hstack(all_client_data_list_flat)
+        else:
+            all_client_data_list_flat = all_client_data_list_flat.flatten()
+
+        if(len(all_client_data_list_flat) == 0):
+          return
+        self.do_pickling(client_data_key, all_client_data_list_flat, cumulative_stats_folder_path)
+
+
+
+    def evaluate(self, excludes_list = ["client_collisions_list", "client_lane_invasions_list"]):
         """
         Used to save all members' statistics.
 
@@ -1476,13 +1502,17 @@ class ScenarioManager:
             self.evaluate_client_process_data(cumulative_stats_folder_path)
             self.evaluate_individual_client_data(cumulative_stats_folder_path)
 
-            client_helper = ClientDebugHelper(0)
-            debug_data_lists = client_helper.get_debug_data().keys()
-            for list_name in debug_data_lists:
+        client_helper = ClientDebugHelper(0)
+        debug_data_lists = client_helper.get_debug_data().keys()
+         
+        for list_name in debug_data_lists:
                 if excludes_list is not None and list_name in excludes_list:
                     continue
                 
                 self.evaluate_client_data(list_name, cumulative_stats_folder_path)
+                logger.debug(list_name)
+
+        #self.evaluate_collision_data(cumulative_stats_folder_path)
 
         # ___________Client Step time__________________________________
         client_tick_time_list = self.debug_helper.client_tick_time_list

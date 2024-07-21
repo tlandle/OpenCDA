@@ -55,7 +55,7 @@ class ClientDebugHelper(PlanDebugHelper):
             "client_controller_step_time_list" : self.controller_step_time_list,
             "client_vehicle_step_time_list" : self.vehicle_step_time_list,
             "client_control_time_list" : self.control_time_list,
-            "client_collisons_list" : self.collisions_event_list,
+            "client_collisions_list" : self.collisions_event_list,
             "client_lane_invasions_list" : self.lane_invasions_list,
         }
 
@@ -291,4 +291,4 @@ class ClientDebugHelper(PlanDebugHelper):
               'z': obj.location.z})
 
             self.lane_invasions_list.append(lane_invasion_event)
- 
+

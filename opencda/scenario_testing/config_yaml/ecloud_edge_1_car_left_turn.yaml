@@ -2,10 +2,10 @@ description: |-
   Copyright 2021 <Georgia Tech>
   Author: Tyler Landle <tlandle3@gatech.edu>
   Content: This is the scenario testing configuration file for edge scenario
-           at Town06 using CARLA
+           at Town12 using CARLA
 
 distributed: false
-define: &perception_is_active true
+define: &perception_is_active false
 perception_active: *perception_is_active
 
 # define carla simulation setting
@@ -29,9 +29,9 @@ world:
 vehicle_base: &vehicle_base
   sensing: &base_sensing
     perception: &base_perception
-      activate: true
+      activate: false
       camera:
-        visualize: 3 # how many camera images need to be visualized. 0 means no visualization for camera
+        visualize: 0 # how many camera images need to be visualized. 0 means no visualization for camera
         num: 3 # how many cameras are mounted on the vehicle.
         positions:  # relative positions (x,y,z,yaw) of the camera. len(positions) should be equal to camera num
           - [2.5, 0, 1.0, 0]
@@ -128,9 +128,9 @@ vehicle_base: &vehicle_base
 rsu_base: &rsu_base
   sensing:
     perception:
-      activate: true # when not activated, objects positions will be retrieved from server directly
+      activate: false # when not activated, objects positions will be retrieved from server directly
       camera:
-        visualize: 4 # how many camera images need to be visualized. 0 means no visualization for camera
+        visualize: 0 # how many camera images need to be visualized. 0 means no visualization for camera
         num: 4 # how many cameras are mounted on the vehicle. Maximum 3(frontal, left and right cameras)
         # relative positions (x,y,z,yaw) of the camera. len(positions) should be equal to camera num
         positions:
@@ -180,7 +180,7 @@ edge_base: &edge_base
   num_lanes: 4
   edge_dt: 0.2 # must be an even multiple of world_dt
   search_dt: 2
-  edge_sets_destination: true # otherwise, edge sets WP
+  edge_sets_destination: false # otherwise, edge sets WP
   mode: PERCEPTION
 
 # define the background traffic control by carla
@@ -207,16 +207,16 @@ scenario:
     step_count: 750
   edge_list:
     - <<: *edge_base
-      destination: [-250, -15.79, 0.3] # shared by *all* vehicles when edge_sets_destination == true
+      destination: [-160, -90.02, 0.3] # shared by *all* vehicles when edge_sets_destination == true
       rsus:
       - <<: *rsu_base
         name: rsu1
-        spawn_position: [-1.97, -17.08, 3.0]
+        spawn_position: [-117.83, 90.98, 3.0]
         id: -1
       vehicles:
       - <<: *vehicle_base
-        spawn_position: [155.52, -19.79, 0.3, 0, -180, 0]
-        destination: [-130, -15.79, 0.3]
+        spawn_position: [-117.38, 31.98, 0.3, 0, 270, 0]
+        destination: [-160, -90.02, 0.3]
         sensing:
           <<: *base_sensing
           perception:
@@ -238,8 +238,31 @@ scenario:
             debug_trajectory: true
             debug: false
       - <<: *vehicle_base
-        spawn_position: [145.52, -19.79, 0.3, 0, -180, 0]
-        destination: [-130, -15.79, 0.3]
+        spawn_position: [-134, -115, 0.3, 0, 90, 0]
+        destination: [-134, 115, 0.3]
+        sensing:
+          <<: *base_sensing
+          perception:
+            <<: *base_perception
+          localization:
+            <<: *base_localize
+            debug_helper:
+              <<: *loc_debug_helper
+              show_animation: false
+        v2x:
+          <<: *base_v2x
+          communication_range: 35
+        behavior:
+          <<: *base_behavior
+          max_speed: 50
+          overtake_allowed: true
+          local_planner:
+            <<: *base_local_planner
+            debug_trajectory: false
+            debug: false
+      - <<: *vehicle_base
+        spawn_position: [-131, -115, 0.3, 0, 90, 0]
+        destination: [-131, 115, 0.3]
         sensing:
           <<: *base_sensing
           perception:
@@ -258,77 +281,54 @@ scenario:
           overtake_allowed: true
           local_planner:
             <<: *base_local_planner
-            debug_trajectory: true
+            debug_trajectory: false
             debug: false
-      - <<: *vehicle_base
-        spawn_position: [145.52, -15.79, 0.3, 0, -180, 0]
-        destination: [-130, -15.79, 0.3]
-        sensing:
-          <<: *base_sensing
-          perception:
-            <<: *base_perception
-          localization:
-            <<: *base_localize
-            debug_helper:
-              <<: *loc_debug_helper
-              show_animation: false
-        v2x:
-          <<: *base_v2x
-          communication_range: 35
-        behavior:
-          <<: *base_behavior
-          max_speed: 100
-          overtake_allowed: true
-          local_planner:
-            <<: *base_local_planner
-            debug_trajectory: true
-            debug: false
-      - <<: *vehicle_base
-        spawn_position: [155.60, -15.79, 0.3, 0, -180, 0]
-        destination: [-110, -15.79, 0.3]
-        sensing:
-          <<: *base_sensing
-          perception:
-            <<: *base_perception
-          localization:
-            <<: *base_localize
-            debug_helper:
-              <<: *loc_debug_helper
-              show_animation: false
-        v2x:
-          <<: *base_v2x
-          communication_range: 35
-        behavior:
-          <<: *base_behavior
-          max_speed: 75
-          overtake_allowed: true
-          local_planner:
-            <<: *base_local_planner
-            debug_trajectory: true
-            debug: false
-      - <<: *vehicle_base
-        spawn_position: [205.52, -19.79, 0.3, 0, -180, 0]
-        destination: [-130, -15.79, 0.3]
-        sensing:
-          <<: *base_sensing
-          perception:
-            <<: *base_perception
-          localization:
-            <<: *base_localize
-            debug_helper:
-              <<: *loc_debug_helper
-              show_animation: false
-        v2x:
-          <<: *base_v2x
-          communication_range: 35
-        behavior:
-          <<: *base_behavior
-          max_speed: 100
-          overtake_allowed: true
-          local_planner:
-            <<: *base_local_planner
-            debug_trajectory: true
-            debug: false
+#      - <<: *vehicle_base
+#        spawn_position: [-134, -110, 0.3, 0, 90, 0]
+#        destination: [-134, 115, 0.3]
+#        sensing:
+#          <<: *base_sensing
+#          perception:
+#            <<: *base_perception
+#          localization:
+#            <<: *base_localize
+#            debug_helper:
+#              <<: *loc_debug_helper
+#              show_animation: false
+#        v2x:
+#          <<: *base_v2x
+#          communication_range: 35
+#        behavior:
+#          <<: *base_behavior
+#          max_speed: 75
+#          overtake_allowed: true
+#          local_planner:
+#            <<: *base_local_planner
+#            debug_trajectory: true
+#            debug: false
+#      - <<: *vehicle_base
+#        spawn_position: [-131, -110, 0.3, 0, 90, 0]
+#        destination: [-131, -, 0.3]
+#        sensing:
+#          <<: *base_sensing
+#          perception:
+#            <<: *base_perception
+#          localization:
+#            <<: *base_localize
+#            debug_helper:
+#              <<: *loc_debug_helper
+#              show_animation: false
+#        v2x:
+#          <<: *base_v2x
+#          communication_range: 35
+#        behavior:
+#          <<: *base_behavior
+#          max_speed: 100
+#          overtake_allowed: true
+#          local_planner:
+#            <<: *base_local_planner
+#            debug_trajectory: true
+#            debug: false
 #      - <<: *vehicle_base
 #        spawn_position: [185.52, -19.79, 0.3, 0, -180, 0]
 #        destination: [-130, -15.79, 0.3]

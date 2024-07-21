@@ -224,7 +224,7 @@ class VehicleManager(object):
                         self.destination['y'] = cav_config['destination'][1]
                         self.destination['z'] = cav_config['destination'][2]
 
-                    print("Destination: (%s, %s, %s)" %(self.destination['x'], self.destination['y'], self.destination['z']))
+                    #print("Destination: (%s, %s, %s)" %(self.destination['x'], self.destination['y'], self.destination['z']))
 
                     self.destination_location = carla.Location(
                             x=self.destination['x'],
@@ -425,6 +425,23 @@ class VehicleManager(object):
                 round(actor_location.y, 3),
                 round(actor_location.z, 3)))
 
+        print(
+            "Agent collided against object with type={} and id={} at (x={}, y={}, z={})".format(
+                event.other_actor.type_id,
+                event.other_actor.id,
+                round(actor_location.x, 3),
+                round(actor_location.y, 3),
+                round(actor_location.z, 3)))
+
+        for obj in self.agent.objects['vehicles']:
+            print("Identified Vehicle at (%s, %s, %s)" %(obj.get_location().x, obj.get_location().y, obj.get_location().z))
+
+        for obj in self.agent.objects['static']:
+            print("Identified Static Object at (%s, %s, %s)" %(obj.get_location().x, obj.get_location().y, obj.get_location().z))
+
+        #input()
+        #print(self.agent.objects)
+
         self.debug_helper.update_collision(collision_event)
 
         # Number 0: static objects -> ignore it
@@ -485,6 +502,9 @@ class VehicleManager(object):
         self.agent.set_destination(
             start_location, end_location, clean, end_reset)
 
+        #self.world.debug.draw_point(start_location, size=.1, life_time=1000)
+        #self.world.debug.draw_point(end_location, size=.1, life_time=1000)
+
     def update_info(self):
         """
         Call perception and localization module to
@@ -503,12 +523,31 @@ class VehicleManager(object):
         # object detection
         start_time = time.time()
         objects = self.perception_manager.detect(ego_pos)
-        objects = {**objects ,  **self.edge_objects}
+        print("Objects", objects)
+        #objects = {**objects ,  **self.edge_objects}
+        if 'vehicles' in self.edge_objects:
+            if 'vehicles' in objects:
+                objects['vehicles'].extend(self.edge_objects['vehicles'])
+            else:
+                objects['vehicles'] = self.edge_objects['vehicles']
+
+        if 'traffic_lights' in self.edge_objects:
+            if 'traffic_lights' in objects:
+                objects['traffic_lights'].extend(self.edge_objects['traffic_lights'])
+            else:
+                objects['traffic_lights'] = self.edge_objects['traffic_lights']
+
+        if 'static' in self.edge_objects:
+            if 'static' in objects:
+                objects['static'].extend(self.edge_objects['static'])
+            else:
+                objects['static'] = self.edge_objects['static']
+
         print("Edge Objects", self.edge_objects)
  
        # if self.rsu_manager:
           #objects = {**objects ,  **self.rsu_manager.perception_manager.detect(ego_pos, self.vehicle.id)}
-        print("Objects: " , objects)
+        print("Combined Objects: " , objects)
         end_time = time.time()
         logger.debug("Perception time: %s" %(end_time - start_time))
         self.debug_helper.update_perception_time((end_time-start_time)*1000)
